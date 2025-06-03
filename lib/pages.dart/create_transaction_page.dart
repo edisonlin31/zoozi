@@ -18,13 +18,11 @@ import 'package:zoozitest/repositories/wallet_repository.dart';
 @RoutePage()
 class CreateTransactionPage extends ConsumerStatefulWidget {
   final int walletId;
-  final double balance;
   final TransactionType transactionType;
 
   const CreateTransactionPage({
     super.key,
     required this.walletId,
-    required this.balance,
     required this.transactionType,
   });
 
@@ -102,8 +100,22 @@ class _CreateTransactionPageState extends ConsumerState<CreateTransactionPage> {
     }
   }
 
+  IconData _getCurrencyIcon(String currency) {
+    switch (currency) {
+      case 'USD':
+        return Icons.attach_money; // Dollar icon
+      case 'EUR':
+        return Icons.euro; // Euro icon
+      case 'GBP':
+        return Icons.currency_pound; // Pound icon
+      default:
+        return Icons.money; // Default money icon
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final walletState = ref.watch(walletDetailController(widget.walletId));
     return Scaffold(
       appBar: AppBar(
         title: Text(
@@ -112,111 +124,117 @@ class _CreateTransactionPageState extends ConsumerState<CreateTransactionPage> {
               : AppLocalizations.of(context)!.createWithdrawal,
         ),
       ),
-      body: PopScope(
-        canPop: !_isLoading,
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: AppColors.background(context),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: FormBuilder(
-                      key: _formKey,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          if (widget.transactionType ==
-                              TransactionType.withdrawal) ...[
-                            Text(
-                              '${AppLocalizations.of(context)!.availableBalance}: ${widget.balance.toPriceFormat()}',
-                              style: AppTextStyles.medium(
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                          Text(AppLocalizations.of(context)!.amount),
-                          const SizedBox(height: 8),
-                          FormBuilderTextField(
-                            name: 'amount',
-                            decoration:
-                                FormDecorations.defaultDecoration(
-                                  context: context,
-                                ).copyWith(
-                                  prefixIcon: const Icon(Icons.attach_money),
+      body: walletState.whenOrNull(
+        data: (wallet) {
+          return PopScope(
+            canPop: !_isLoading,
+            child: SafeArea(
+              child: SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppColors.background(context),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: FormBuilder(
+                          key: _formKey,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (widget.transactionType ==
+                                  TransactionType.withdrawal) ...[
+                                Text(
+                                  '${AppLocalizations.of(context)!.availableBalance}: ${wallet.balance.toPriceFormat(currency: wallet.currency)}',
+                                  style: AppTextStyles.medium(
+                                    color: Theme.of(context).primaryColor,
+                                  ),
                                 ),
-                            keyboardType: TextInputType.number,
-                            validator: FormBuilderValidators.compose([
-                              FormBuilderValidators.required(
-                                errorText: AppLocalizations.of(
-                                  context,
-                                )!.amountRequired,
+                                const SizedBox(height: 8),
+                              ],
+                              Text(AppLocalizations.of(context)!.amount),
+                              const SizedBox(height: 8),
+                              FormBuilderTextField(
+                                name: 'amount',
+                                decoration:
+                                    FormDecorations.defaultDecoration(
+                                      context: context,
+                                    ).copyWith(
+                                      prefixIcon: Icon(
+                                        _getCurrencyIcon(wallet.currency),
+                                      ),
+                                    ),
+                                keyboardType: TextInputType.number,
+                                validator: FormBuilderValidators.compose([
+                                  FormBuilderValidators.required(
+                                    errorText: AppLocalizations.of(
+                                      context,
+                                    )!.amountRequired,
+                                  ),
+                                  FormBuilderValidators.min(
+                                    0.01,
+                                    errorText: AppLocalizations.of(
+                                      context,
+                                    )!.amountPositive,
+                                  ),
+                                  (value) {
+                                    final amount =
+                                        double.tryParse(value ?? '0') ?? 0;
+                                    if (widget.transactionType ==
+                                            TransactionType.withdrawal &&
+                                        amount > wallet.balance) {
+                                      return AppLocalizations.of(
+                                        context,
+                                      )!.insufficientFunds;
+                                    }
+                                    return null;
+                                  },
+                                ]),
                               ),
-                              FormBuilderValidators.min(
-                                0.01,
-                                errorText: AppLocalizations.of(
-                                  context,
-                                )!.amountPositive,
+                              const SizedBox(height: 16),
+                              Text(AppLocalizations.of(context)!.description),
+                              const SizedBox(height: 8),
+                              FormBuilderTextField(
+                                name: 'description',
+                                decoration:
+                                    FormDecorations.defaultDecoration(
+                                      context: context,
+                                    ).copyWith(
+                                      prefixIcon: const Icon(Icons.description),
+                                    ),
                               ),
-                              (value) {
-                                final amount =
-                                    double.tryParse(value ?? '0') ?? 0;
-                                if (widget.transactionType ==
-                                        TransactionType.withdrawal &&
-                                    amount > widget.balance) {
-                                  return AppLocalizations.of(
-                                    context,
-                                  )!.insufficientFunds;
-                                }
-                                return null;
-                              },
-                            ]),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(AppLocalizations.of(context)!.description),
-                          const SizedBox(height: 8),
-                          FormBuilderTextField(
-                            name: 'description',
-                            decoration:
-                                FormDecorations.defaultDecoration(
+                              const SizedBox(height: 16),
+                              Text(AppLocalizations.of(context)!.referenceId),
+                              const SizedBox(height: 8),
+                              FormBuilderTextField(
+                                name: 'referenceId',
+                                decoration: FormDecorations.defaultDecoration(
                                   context: context,
-                                ).copyWith(
-                                  prefixIcon: const Icon(Icons.description),
-                                ),
+                                ).copyWith(prefixIcon: const Icon(Icons.tag)),
+                              ),
+                            ],
                           ),
-                          const SizedBox(height: 16),
-                          Text(AppLocalizations.of(context)!.referenceId),
-                          const SizedBox(height: 8),
-                          FormBuilderTextField(
-                            name: 'referenceId',
-                            decoration: FormDecorations.defaultDecoration(
-                              context: context,
-                            ).copyWith(prefixIcon: const Icon(Icons.tag)),
-                          ),
-                        ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      AppButton(
+                        onPressed: _onSubmit,
+                        text: widget.transactionType == TransactionType.deposit
+                            ? AppLocalizations.of(context)!.createDeposit
+                            : AppLocalizations.of(context)!.createWithdrawal,
+                        isLoading: _isLoading,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 16),
-                  AppButton(
-                    onPressed: _onSubmit,
-                    text: widget.transactionType == TransactionType.deposit
-                        ? AppLocalizations.of(context)!.createDeposit
-                        : AppLocalizations.of(context)!.createWithdrawal,
-                    isLoading: _isLoading,
-                  ),
-                ],
+                ),
               ),
             ),
-          ),
-        ),
+          );
+        },
       ),
     );
   }

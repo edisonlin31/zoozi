@@ -9,7 +9,12 @@ import 'package:intl/intl.dart';
 
 class TransactionItem extends StatelessWidget {
   final Transaction transaction;
-  const TransactionItem({required this.transaction, super.key});
+  final String currency;
+  const TransactionItem({
+    required this.transaction,
+    required this.currency,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -80,7 +85,7 @@ class TransactionItem extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  transaction.amount.toPriceFormat(),
+                  transaction.amount.toPriceFormat(currency: currency),
                   style: AppTextStyles.medium(fontSize: 16, color: typeColor),
                 ),
                 if (transaction.description != null) ...[

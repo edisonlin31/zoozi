@@ -43,7 +43,7 @@ class WalletCardView extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '${AppLocalizations.of(context)!.balanceLabel}: ${wallet.balance.toPriceFormat()}',
+                        '${AppLocalizations.of(context)!.balanceLabel}: ${wallet.balance.toPriceFormat(currency: wallet.currency)}',
                         style: AppTextStyles.regular(
                           fontSize: 14,
                           color: AppColors.secondaryText(context),

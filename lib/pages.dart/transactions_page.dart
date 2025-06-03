@@ -5,6 +5,7 @@ import 'package:zoozitest/base/utils/app_text_styles.dart';
 import 'package:zoozitest/base/utils/colors.dart';
 import 'package:zoozitest/base/widgets/transaction_item.dart';
 import 'package:zoozitest/controllers/transactions_controller.dart';
+import 'package:zoozitest/controllers/wallet_detail_controller.dart';
 import 'package:zoozitest/l10n/app_localizations.dart';
 
 @RoutePage()
@@ -49,56 +50,64 @@ class _TransactionsPageState extends ConsumerState<TransactionsPage> {
     final transactionsState = ref.watch(
       transactionsController(widget.walletId),
     );
+    final walletState = ref.watch(walletDetailController(widget.walletId));
     return Scaffold(
       appBar: AppBar(title: Text(AppLocalizations.of(context)!.transactions)),
-      body: transactionsState.when(
-        data: (pagination) {
-          final controller = ref.read(
-            transactionsController(widget.walletId).notifier,
-          );
-          final data = pagination.transactions;
-          return RefreshIndicator(
-            onRefresh: () async {
-              await controller.getTransactions(refresh: true);
-            },
-            child: ListView.builder(
-              physics: const AlwaysScrollableScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              controller: _scrollController,
-              itemCount: data.length + 1,
-              itemBuilder: (context, index) {
-                if (index == data.length) {
-                  return Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: controller.hasMore
-                        ? const Center(child: CircularProgressIndicator())
-                        : Center(
-                            child: Text(
-                              data.length > 10
-                                  ? AppLocalizations.of(
-                                      context,
-                                    )!.noMoreTransactions
-                                  : '',
-                              style: AppTextStyles.regular(
-                                fontSize: 12,
-                                color: AppColors.secondaryText(context),
+      body: walletState.whenOrNull(
+        data: (wallet) {
+          return transactionsState.when(
+            data: (pagination) {
+              final controller = ref.read(
+                transactionsController(widget.walletId).notifier,
+              );
+              final data = pagination.transactions;
+              return RefreshIndicator(
+                onRefresh: () async {
+                  await controller.getTransactions(refresh: true);
+                },
+                child: ListView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  controller: _scrollController,
+                  itemCount: data.length + 1,
+                  itemBuilder: (context, index) {
+                    if (index == data.length) {
+                      return Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: controller.hasMore
+                            ? const Center(child: CircularProgressIndicator())
+                            : Center(
+                                child: Text(
+                                  data.length > 10
+                                      ? AppLocalizations.of(
+                                          context,
+                                        )!.noMoreTransactions
+                                      : '',
+                                  style: AppTextStyles.regular(
+                                    fontSize: 12,
+                                    color: AppColors.secondaryText(context),
+                                  ),
+                                ),
                               ),
-                            ),
-                          ),
-                  );
-                }
-                final transaction = data[index];
-                return TransactionItem(transaction: transaction);
-              },
+                      );
+                    }
+                    final transaction = data[index];
+                    return TransactionItem(
+                      transaction: transaction,
+                      currency: wallet.currency,
+                    );
+                  },
+                ),
+              );
+            },
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, stackTrace) => Center(
+              child: Text(
+                '${AppLocalizations.of(context)!.failedToLoadTransactions}: $error',
+              ),
             ),
           );
         },
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, stackTrace) => Center(
-          child: Text(
-            '${AppLocalizations.of(context)!.failedToLoadTransactions}: $error',
-          ),
-        ),
       ),
     );
   }

@@ -29,7 +29,6 @@ class CreateTransactionRoute
   CreateTransactionRoute({
     _i11.Key? key,
     required int walletId,
-    required double balance,
     required _i12.TransactionType transactionType,
     List<_i10.PageRouteInfo>? children,
   }) : super(
@@ -37,7 +36,6 @@ class CreateTransactionRoute
          args: CreateTransactionRouteArgs(
            key: key,
            walletId: walletId,
-           balance: balance,
            transactionType: transactionType,
          ),
          initialChildren: children,
@@ -52,7 +50,6 @@ class CreateTransactionRoute
       return _i1.CreateTransactionPage(
         key: args.key,
         walletId: args.walletId,
-        balance: args.balance,
         transactionType: args.transactionType,
       );
     },
@@ -63,7 +60,6 @@ class CreateTransactionRouteArgs {
   const CreateTransactionRouteArgs({
     this.key,
     required this.walletId,
-    required this.balance,
     required this.transactionType,
   });
 
@@ -71,13 +67,11 @@ class CreateTransactionRouteArgs {
 
   final int walletId;
 
-  final double balance;
-
   final _i12.TransactionType transactionType;
 
   @override
   String toString() {
-    return 'CreateTransactionRouteArgs{key: $key, walletId: $walletId, balance: $balance, transactionType: $transactionType}';
+    return 'CreateTransactionRouteArgs{key: $key, walletId: $walletId, transactionType: $transactionType}';
   }
 }
 

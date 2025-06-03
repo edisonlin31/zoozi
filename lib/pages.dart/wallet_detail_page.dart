@@ -61,7 +61,6 @@ class _WalletDetailPageState extends ConsumerState<WalletDetailPage> {
                                 context.router.push(
                                   CreateTransactionRoute(
                                     walletId: wallet.id,
-                                    balance: wallet.balance,
                                     transactionType: TransactionType.withdrawal,
                                   ),
                                 );
@@ -77,7 +76,6 @@ class _WalletDetailPageState extends ConsumerState<WalletDetailPage> {
                                 context.router.push(
                                   CreateTransactionRoute(
                                     walletId: wallet.id,
-                                    balance: wallet.balance,
                                     transactionType: TransactionType.deposit,
                                   ),
                                 );
@@ -147,7 +145,10 @@ class _WalletDetailPageState extends ConsumerState<WalletDetailPage> {
                               : pagination.transactions.length,
                           itemBuilder: (context, index) {
                             final transaction = pagination.transactions[index];
-                            return TransactionItem(transaction: transaction);
+                            return TransactionItem(
+                              transaction: transaction,
+                              currency: wallet.currency,
+                            );
                           },
                         );
                       },
