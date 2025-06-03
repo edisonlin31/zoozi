@@ -37,9 +37,9 @@ class WalletDetailController extends StateNotifier<AsyncValue<Wallet>> {
           .read(walletsRepositoryProvider)
           .service
           .getWalletDetail(walletId: _walletId);
+      _ref.read(walletsController.notifier).updateWallet(wallet);
       if (mounted) {
         state = AsyncData(wallet);
-        _ref.read(walletsController.notifier).updateWallet(wallet);
       }
     } catch (e, st) {
       if (mounted) {
